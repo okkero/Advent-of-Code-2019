@@ -1,3 +1,5 @@
+use std::io::BufRead;
+
 use crate::day::{Day, Solution};
 
 pub const DAY1: Day = Day {
@@ -8,24 +10,24 @@ pub const DAY1: Day = Day {
     },
 };
 
-fn part1(input: &str) {
+fn part1(input: &mut dyn BufRead) {
     let sum: u32 =
         input
             .lines()
             .map(|line| {
-                let mass = line.parse::<u32>().unwrap();
+                let mass = line.unwrap().parse::<u32>().unwrap();
                 calculate_fuel(mass)
             })
             .sum();
     println!("Fuel requirements: {}", sum);
 }
 
-fn part2(input: &str) {
+fn part2(input: &mut dyn BufRead) {
     let sum: u32 =
         input
             .lines()
             .map(|line| {
-                let mass = line.parse::<u32>().unwrap();
+                let mass = line.unwrap().parse::<u32>().unwrap();
                 let mut required_fuel = calculate_fuel(mass);
                 let mut previous_fuel = required_fuel;
                 loop {

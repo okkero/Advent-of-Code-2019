@@ -1,6 +1,6 @@
 use std::env;
 use std::fs::File;
-use std::io::Read;
+use std::io::{BufReader, Seek, SeekFrom};
 
 use day::Day;
 
@@ -21,14 +21,13 @@ fn main() {
 fn run_day(day_num: usize) {
     let day = DAYS.get(day_num - 1).expect("Invalid day");
     let mut input_file = File::open(format!("input/day{}.txt", day_num)).expect("Input file not found");
-    let mut input = String::new();
-    input_file.read_to_string(&mut input).expect("Unable to read input");
 
     println!("--- Day {}: {} ---", day_num, day.title);
     println!();
     println!("Part 1:");
-    (day.solution.part1)(&input);
+    (day.solution.part1)(&mut BufReader::new(&mut input_file));
     println!();
+    input_file.seek(SeekFrom::Start(0)).unwrap();
     println!("Part 2:");
-    (day.solution.part2)(&input);
+    (day.solution.part2)(&mut BufReader::new(&mut input_file));
 }
