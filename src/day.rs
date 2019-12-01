@@ -4,6 +4,6 @@ pub struct Day {
 }
 
 pub struct Solution {
-    pub part1: fn(),
-    pub part2: fn(),
+    pub part1: fn(input: &str),
+    pub part2: fn(input: &str),
 }
