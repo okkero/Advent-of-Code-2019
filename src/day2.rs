@@ -11,7 +11,7 @@ pub const DAY2: Day = Day {
     },
 };
 
-enum Operation {
+enum Instruction {
     Add(usize, usize, usize),
     Mul(usize, usize, usize),
     Halt,
@@ -24,9 +24,9 @@ fn part1(input: &mut dyn BufRead) {
     let mut instruction_pointer = 0;
     let result =
         loop {
-            let operation = parse_operation(&program[instruction_pointer..])
+            let instruction = parse_instruction(&program[instruction_pointer..])
                 .expect("Unable to parse instruction");
-            let halted = perform_operation(&mut program, operation);
+            let halted = perform_instruction(&mut program, instruction);
             if halted {
                 break program[0];
             }
@@ -48,21 +48,21 @@ fn read_program(input: &mut dyn BufRead) -> Result<Vec<usize>, Box<dyn Error>> {
         .collect()
 }
 
-fn parse_operation(slice: &[usize]) -> Result<Operation, usize> {
+fn parse_instruction(slice: &[usize]) -> Result<Instruction, usize> {
     let opcode = slice[0];
     match opcode {
-        1 => Ok(Operation::Add(slice[1], slice[2], slice[3])),
-        2 => Ok(Operation::Mul(slice[1], slice[2], slice[3])),
-        99 => Ok(Operation::Halt),
+        1 => Ok(Instruction::Add(slice[1], slice[2], slice[3])),
+        2 => Ok(Instruction::Mul(slice[1], slice[2], slice[3])),
+        99 => Ok(Instruction::Halt),
         _ => Err(opcode)
     }
 }
 
-fn perform_operation(program: &mut [usize], operation: Operation) -> bool {
-    match operation {
-        Operation::Add(a, b, address) => program[address] = program[a] + program[b],
-        Operation::Mul(a, b, address) => program[address] = program[a] * program[b],
-        Operation::Halt => return true
+fn perform_instruction(program: &mut [usize], instruction: Instruction) -> bool {
+    match instruction {
+        Instruction::Add(a, b, address) => program[address] = program[a] + program[b],
+        Instruction::Mul(a, b, address) => program[address] = program[a] * program[b],
+        Instruction::Halt => return true
     }
 
     false
