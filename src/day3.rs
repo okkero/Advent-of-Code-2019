@@ -1,11 +1,10 @@
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use std::io::BufRead;
+use std::ops::Range;
 
 use crate::day::{Day, Solution};
-use std::mem::size_of;
 
 pub const DAY3: Day = Day {
     title: "Crossed Wires",
@@ -26,7 +25,7 @@ impl Display for InvalidDirectionError {
 
 impl Error for InvalidDirectionError {}
 
-#[derive(Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 enum Axis {
     X,
     Y,
@@ -45,19 +44,27 @@ struct Run {
 }
 
 impl Run {
-    fn visited_cell(&self, x: isize, y: isize) -> bool {
-        let (index_along, index_lateral) =
-            match self.along_axis {
-                Axis::X => (x, y),
-                Axis::Y => (y, x)
-            };
-        let (interval_start, interval_length) = self.interval;
-        let interval_end = interval_start + interval_length as isize;
+    fn interval_range(&self) -> Range<isize> {
+        let (start, length) = self.interval;
+        start + 1..start + length as isize
+    }
 
-        let on_lateral_offset = index_lateral == self.lateral_offset;
-        let within_interval = index_along > interval_start && index_along < interval_end;
+    fn intersects(&self, other: &Run) -> Option<(isize, isize)> {
+        if self.along_axis == other.along_axis {
+            return None;
+        }
 
-        on_lateral_offset && within_interval
+        let other_crosses_self_lateral = other.interval_range().contains(&self.lateral_offset);
+        let self_crosses_other_lateral = self.interval_range().contains(&other.lateral_offset);
+
+        if !other_crosses_self_lateral || !self_crosses_other_lateral {
+            return None;
+        }
+
+        match self.along_axis {
+            Axis::X => Some((other.lateral_offset, self.lateral_offset)),
+            Axis::Y => Some((self.lateral_offset, other.lateral_offset))
+        }
     }
 }
 
@@ -112,7 +119,18 @@ fn part1(input: &mut dyn BufRead) {
     let wire1 = Wire::trace(&wire_steps_vec[0]);
     let wire2 = Wire::trace(&wire_steps_vec[1]);
 
-    println!("{:#?}", wire1);
+    let closest_intersection =
+        wire1.runs.iter()
+            .flat_map(|run1|
+                wire2.runs.iter()
+                    .filter_map(move |run2|
+                        run1.intersects(run2)))
+            .min_by_key(|(x, y)| x.abs() + y.abs())
+            .expect("Unable to find an intersection");
+
+    let (x, y) = closest_intersection;
+    println!("Closest intersection: ({}, {})", x, y);
+    println!("Manhattan distance to origin: {}", x.abs() + y.abs());
 }
 
 fn part2(input: &mut dyn BufRead) {}
