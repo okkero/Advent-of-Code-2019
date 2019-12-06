@@ -6,9 +6,10 @@ use day::Day;
 
 mod day;
 mod day1;
+mod day2;
 
-const DAYS: [Day; 1] =
-    [day1::DAY1];
+const DAYS: [Day; 2] =
+    [day1::DAY1, day2::DAY2];
 
 fn main() {
     let args = env::args();
