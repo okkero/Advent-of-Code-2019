@@ -36,6 +36,12 @@ struct Step {
     length: isize,
 }
 
+struct RunIntersection {
+    global_coords: (isize, isize),
+    run1_offset: usize,
+    run2_offset: usize,
+}
+
 #[derive(Debug)]
 struct Run {
     along_axis: Axis,
@@ -46,10 +52,10 @@ struct Run {
 impl Run {
     fn interval_range(&self) -> Range<isize> {
         let (start, length) = self.interval;
-        start + 1..start + length as isize
+        start + 1..start + length as isize - 1
     }
 
-    fn intersects(&self, other: &Run) -> Option<(isize, isize)> {
+    fn intersects(&self, other: &Run) -> Option<RunIntersection> {
         if self.along_axis == other.along_axis {
             return None;
         }
@@ -61,10 +67,17 @@ impl Run {
             return None;
         }
 
-        match self.along_axis {
-            Axis::X => Some((other.lateral_offset, self.lateral_offset)),
-            Axis::Y => Some((self.lateral_offset, other.lateral_offset))
-        }
+        let global_coords =
+            match self.along_axis {
+                Axis::X => (other.lateral_offset, self.lateral_offset),
+                Axis::Y => (self.lateral_offset, other.lateral_offset)
+            };
+
+        Some(RunIntersection {
+            global_coords,
+            run1_offset: (other.lateral_offset - self.interval.0) as usize,
+            run2_offset: (self.lateral_offset - other.interval.0) as usize,
+        })
     }
 }
 
@@ -109,15 +122,7 @@ impl Wire {
 }
 
 fn part1(input: &mut dyn BufRead) {
-    let wire_steps_vec =
-        input
-            .lines()
-            .map(|r| parse_wire_steps(&r?))
-            .collect::<Result<Vec<_>, Box<dyn Error>>>()
-            .expect("Unable to parse input");
-
-    let wire1 = Wire::trace(&wire_steps_vec[0]);
-    let wire2 = Wire::trace(&wire_steps_vec[1]);
+    let (wire1, wire2) = parse_wires(input);
 
     let closest_intersection =
         wire1.runs.iter()
@@ -125,6 +130,7 @@ fn part1(input: &mut dyn BufRead) {
                 wire2.runs.iter()
                     .filter_map(move |run2|
                         run1.intersects(run2)))
+            .map(|intersection| intersection.global_coords)
             .min_by_key(|(x, y)| x.abs() + y.abs())
             .expect("Unable to find an intersection");
 
@@ -133,7 +139,52 @@ fn part1(input: &mut dyn BufRead) {
     println!("Manhattan distance to origin: {}", x.abs() + y.abs());
 }
 
-fn part2(input: &mut dyn BufRead) {}
+fn part2(input: &mut dyn BufRead) {
+    let (wire1, wire2) = parse_wires(input);
+
+    let mut steps1 = 0;
+    let shortest_path_intersection =
+        wire1.runs.iter()
+            .flat_map(|run1| {
+                let mut steps2 = 0;
+                let res =
+                    wire2.runs.iter()
+                        .filter_map(move |run2| {
+                            let res =
+                                if let Some(intersection) = run1.intersects(run2) {
+                                    Some((intersection.global_coords, steps1 + intersection.run1_offset, steps2 + intersection.run2_offset))
+                                } else {
+                                    None
+                                };
+                            steps2 += run2.interval.1;
+                            res
+                        });
+                steps1 += run1.interval.1;
+                res
+            });
+            //.min_by_key(|(steps1, steps2)| steps1 + steps2)
+            //.expect("Unable to find an intersection");
+
+    //let (steps1, steps2) = shortest_path_intersection;
+    for (coords, steps1, steps2) in shortest_path_intersection {
+        println!("First reached intersection - Wire 1: {} steps, Wire 2: {} steps", steps1, steps2);
+        println!("Coords: ({}, {})", coords.0, coords.1);
+        println!("Answer: {}", steps1 + steps2);
+    }
+}
+
+fn parse_wires(input: &mut dyn BufRead) -> (Wire, Wire) {
+    let wire_steps_vec =
+        input
+            .lines()
+            .map(|r| parse_wire_steps(&r?))
+            .collect::<Result<Vec<_>, Box<dyn Error>>>()
+            .expect("Unable to parse input");
+    let wire1 = Wire::trace(&wire_steps_vec[0]);
+    let wire2 = Wire::trace(&wire_steps_vec[1]);
+
+    (wire1, wire2)
+}
 
 fn parse_wire_steps(input: &str) -> Result<Vec<Step>, Box<dyn Error>> {
     input
