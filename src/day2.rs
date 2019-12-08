@@ -1,15 +1,10 @@
 use std::error::Error;
 use std::io::BufRead;
 
-use crate::day::{Day, Solution};
+use crate::puzzle::{Puzzle, PuzzleInputReader, RawInput, RawInputReader, Solution};
+use crate::puzzle;
 
-pub const DAY2: Day = Day {
-    title: "1202 Program Alarm",
-    solution: Solution {
-        part1,
-        part2,
-    },
-};
+puzzle!("1202 Program Alarm", RawInput, RawInputReader);
 
 struct Program(Vec<usize>);
 

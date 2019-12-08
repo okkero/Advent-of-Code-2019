@@ -4,15 +4,10 @@ use std::fmt;
 use std::io::BufRead;
 use std::ops::Range;
 
-use crate::day::{Day, Solution};
+use crate::puzzle::{Puzzle, RawInputReader, RawInput, Solution, PuzzleInputReader};
+use crate::puzzle;
 
-pub const DAY3: Day = Day {
-    title: "Crossed Wires",
-    solution: Solution {
-        part1,
-        part2,
-    },
-};
+puzzle!("Crossed Wires", RawInput, RawInputReader);
 
 #[derive(Debug)]
 struct InvalidDirectionError(char);

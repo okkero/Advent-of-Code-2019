@@ -1,14 +1,9 @@
 use std::io::BufRead;
 
-use crate::day::{Day, Solution};
+use crate::puzzle::{Puzzle, Solution, RawInputReader, RawInput, PuzzleInputReader};
+use crate::puzzle;
 
-pub const DAY1: Day = Day {
-    title: "The Tyranny of the Rocket Equation",
-    solution: Solution {
-        part1,
-        part2,
-    },
-};
+puzzle!("The Tyranny of the Rocket Equation", RawInput, RawInputReader);
 
 fn part1(input: &mut dyn BufRead) {
     let sum: u32 =
